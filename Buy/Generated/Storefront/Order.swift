@@ -70,6 +70,16 @@ extension Storefront {
 			return self
 		}
 
+		/// The total cost of duties. 
+		@discardableResult
+		open func currentTotalDuties(alias: String? = nil, _ subfields: (MoneyV2Query) -> Void) -> OrderQuery {
+			let subquery = MoneyV2Query()
+			subfields(subquery)
+
+			addField(field: "currentTotalDuties", aliasSuffix: alias, subfields: subquery)
+			return self
+		}
+
 		/// The total amount of the order, including duties, taxes and discounts, minus 
 		/// amounts for line items that have been removed. 
 		@discardableResult
@@ -238,6 +248,16 @@ extension Storefront {
 		@discardableResult
 		open func orderNumber(alias: String? = nil) -> OrderQuery {
 			addField(field: "orderNumber", aliasSuffix: alias)
+			return self
+		}
+
+		/// The total of all duties applied to the order. 
+		@discardableResult
+		open func originalTotalDuties(alias: String? = nil, _ subfields: (MoneyV2Query) -> Void) -> OrderQuery {
+			let subquery = MoneyV2Query()
+			subfields(subquery)
+
+			addField(field: "originalTotalDuties", aliasSuffix: alias, subfields: subquery)
 			return self
 		}
 
@@ -446,6 +466,13 @@ extension Storefront {
 				}
 				return try MoneyV2(fields: value)
 
+				case "currentTotalDuties":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: Order.self, field: fieldName, value: fieldValue)
+				}
+				return try MoneyV2(fields: value)
+
 				case "currentTotalPrice":
 				guard let value = value as? [String: Any] else {
 					throw SchemaViolationError(type: Order.self, field: fieldName, value: fieldValue)
@@ -527,6 +554,13 @@ extension Storefront {
 					throw SchemaViolationError(type: Order.self, field: fieldName, value: fieldValue)
 				}
 				return Int32(value)
+
+				case "originalTotalDuties":
+				if value is NSNull { return nil }
+				guard let value = value as? [String: Any] else {
+					throw SchemaViolationError(type: Order.self, field: fieldName, value: fieldValue)
+				}
+				return try MoneyV2(fields: value)
 
 				case "originalTotalPrice":
 				guard let value = value as? [String: Any] else {
@@ -683,6 +717,15 @@ extension Storefront {
 			return field(field: "currentSubtotalPrice", aliasSuffix: alias) as! Storefront.MoneyV2
 		}
 
+		/// The total cost of duties. 
+		open var currentTotalDuties: Storefront.MoneyV2? {
+			return internalGetCurrentTotalDuties()
+		}
+
+		func internalGetCurrentTotalDuties(alias: String? = nil) -> Storefront.MoneyV2? {
+			return field(field: "currentTotalDuties", aliasSuffix: alias) as! Storefront.MoneyV2?
+		}
+
 		/// The total amount of the order, including duties, taxes and discounts, minus 
 		/// amounts for line items that have been removed. 
 		open var currentTotalPrice: Storefront.MoneyV2 {
@@ -810,6 +853,15 @@ extension Storefront {
 
 		func internalGetOrderNumber(alias: String? = nil) -> Int32 {
 			return field(field: "orderNumber", aliasSuffix: alias) as! Int32
+		}
+
+		/// The total of all duties applied to the order. 
+		open var originalTotalDuties: Storefront.MoneyV2? {
+			return internalGetOriginalTotalDuties()
+		}
+
+		func internalGetOriginalTotalDuties(alias: String? = nil) -> Storefront.MoneyV2? {
+			return field(field: "originalTotalDuties", aliasSuffix: alias) as! Storefront.MoneyV2?
 		}
 
 		/// The total price of the order before any applied edits. 
@@ -987,6 +1039,12 @@ extension Storefront {
 					response.append(internalGetCurrentSubtotalPrice())
 					response.append(contentsOf: internalGetCurrentSubtotalPrice().childResponseObjectMap())
 
+					case "currentTotalDuties":
+					if let value = internalGetCurrentTotalDuties() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
+
 					case "currentTotalPrice":
 					response.append(internalGetCurrentTotalPrice())
 					response.append(contentsOf: internalGetCurrentTotalPrice().childResponseObjectMap())
@@ -1002,6 +1060,12 @@ extension Storefront {
 					case "lineItems":
 					response.append(internalGetLineItems())
 					response.append(contentsOf: internalGetLineItems().childResponseObjectMap())
+
+					case "originalTotalDuties":
+					if let value = internalGetOriginalTotalDuties() {
+						response.append(value)
+						response.append(contentsOf: value.childResponseObjectMap())
+					}
 
 					case "originalTotalPrice":
 					response.append(internalGetOriginalTotalPrice())
